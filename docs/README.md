@@ -13,14 +13,14 @@ title:
 
 #### Team
 
-- eNumber, Name, [email](mailto:name@email.com)
-- eNumber, Name, [email](mailto:name@email.com)
-- eNumber, Name, [email](mailto:name@email.com)
+- E/17/134, Kavindu Jayasooriya, [email](mailto:e17134@eng.pdn.ac.lk)
+- E/17/207, Pasindu Marasinghe, [email](mailto:e17207@eng.pdn.ac.lk)
+- E/17/318, Udith Senanayake, [email](mailto:e17318@eng.pdn.ac.lk)
 
 #### Supervisors
 
-- Name, [email](mailto:name@eng.pdn.ac.lk)
-- Name, [email](mailto:name@eng.pdn.ac.lk)
+- Prof. Roshan G. Ragel, [email](mailto:name@eng.pdn.ac.lk)
+- Dr. Hasindu Gamaarachchi, [email](mailto:name@eng.pdn.ac.lk)
 
 #### Table of content
 
@@ -55,10 +55,9 @@ This is a sample image, to show how to add images to your page. To learn more op
 ## Publications
 [//]: # "Note: Uncomment each once you uploaded the files to the repository"
 
-<!-- 1. [Semester 7 report](./) -->
-<!-- 2. [Semester 7 slides](./) -->
-<!-- 3. [Semester 8 report](./) -->
-<!-- 4. [Semester 8 slides](./) -->
+1. [Project Proposal Presentation](https://docs.google.com/presentation/d/1B5NHxaCxq4HWcRp3xfms52uuq7upGqzzS-gKsycfYFk/edit?usp=sharing)
+2. [Progress Presentation](https://docs.google.com/presentation/d/1SknsVYHWG2FfJuG1bv61YaqGDOdCnZuaPIiq5vtCEjM/edit?usp=sharing)
+3. [Final Presentation](https://docs.google.com/presentation/d/1cpSIqvn2VKrk00jgBUI-Jm8HtgLYtgKnLqsMLzxlVk4/edit?usp=sharing)
 <!-- 5. Author 1, Author 2 and Author 3 "Research paper title" (2021). [PDF](./). -->
 
 
@@ -66,8 +65,8 @@ This is a sample image, to show how to add images to your page. To learn more op
 
 [//]: # ( NOTE: EDIT THIS LINKS WITH YOUR REPO DETAILS )
 
-- [Project Repository](https://github.com/cepdnaclk/repository-name)
-- [Project Page](https://cepdnaclk.github.io/repository-name)
+- [Project Repository](https://github.com/cepdnaclk/e17-4yp-novel-compression-methods-for-nanopore-raw-signal-data)
+- [Project Page](https://cepdnaclk.github.io/e17-4yp-novel-compression-methods-for-nanopore-raw-signal-data/)
 - [Department of Computer Engineering](http://www.ce.pdn.ac.lk/)
 - [University of Peradeniya](https://eng.pdn.ac.lk/)
 
