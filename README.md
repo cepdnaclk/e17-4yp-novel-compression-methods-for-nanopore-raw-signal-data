@@ -7,4 +7,5 @@ A nanopore raw signal dataset for a single human genome is around 1TB in size wh
 ## Programming Languages Used
 - C
 - Python
+- R
 - Shell scripting
