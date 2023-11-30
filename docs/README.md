@@ -28,9 +28,8 @@ title:
 2. [Introduction](#introduction)
 3. [Related works](#related-works)
 4. [Methodology](#methodology)
-5. [Experiment Setup and Implementation](#experiment-setup-and-implementation)
 6. [Results and Analysis](#results-and-analysis)
-7. [Conclusion](#conclusion)
+7. [Discussion](#discussion)
 8. [Publications](#publications)
 9. [Links](#links)
 
@@ -82,11 +81,105 @@ Both lossless and lossy compression techniques have previously been examined. Bu
 
 ## Methodology
 
-## Experiment Setup and Implementation
+We conduct our experiments in four stages; 
+
+(i) apply the selected lossy manipulation method on raw reads in blow5 format (the binary format of slow5, first introduced in the article “Fast nanopore sequencing data analysis with SLOW5” in January 2022 [16].) This is an intermediate stage, the result of which is being used in other stages.
+(ii) subject the augmented read data to selected lossless compression methods and analyse the compression ratios. For this purpose, we use the nanopress tool by Jenner, S.[15]
+(iii) base-call the raw reads obtained in stage ‘(i)’ using;
+a. Guppy data processing toolkit from Oxford Nanopore Technologies
+b. Dorado open source base-caller for Oxford Nanopore reads, specifically the fork of Dorado by Samarakoon H., [https://github.com/hiruna72/slow5-dorado](https://github.com/hiruna72/slow5-dorado) that extends its support for blow5.
+
+(iv) methylation calling:
+Calculate the methylation frequency correlation for each bit manipulation with both Dorado and Guppy with respect to the bisulfite methylation frequency.
+Methylation calls all-methylated and pcr datasets to find out the confusion matrix
+
+### Datasets
+
+For the experiments, we employed datasets that encompassed various sequencing chemistries, read lengths, and sampling frequencies. As an example, the dataset PGXXXX230339_reads_chr22 was subjected to sequencing with a sampling frequency of 5 kHz, which accommodates the R10.4.1 sequencing chemistry and the na12878_prom_merged_r9.4.1_chr22 dataset supports the R9 sequencing chemistry having been sequenced with a 4 kHz sampling frequency. Table [x] shows the datasets that the experiments were run on.
+
+### Experiments
+
+This section provides an in-depth analysis of the experiments conducted. The experiments were run on a server with 2  Intel(R) Xeon(R) Gold 6342 CPUs(2.80GHz) 48 Cores & 96 Threads, 651GiB RAM, and 4 NVIDIA A16(15GiB) GPUs having Ubuntu 23.04 as the OS.  The GitHub repository encompasses all the scripts, programs, and datasets necessary for executing the experiments. The GitHub repository encompasses all the scripts, programs, and datasets necessary for executing the experiments.
+
+#### Lossy Bit Manipulation
+
+Raw reads contain a series of 16-bit integers that correspond to the ADC values. We augment these values in bit level by applying simple lossy manipulations
+In this study, we explore 3 different types of such manipulations;
+(a) Truncating LSBs, reducing the number of bits.
+(b) Filling LSBs with 1’s, same number of bits 
+(c) Rounding off the bits to the nearest power of 2.
+
+All the manipulations were done using sigtk (https://github.com/hasindu2008/sigtk) 
+
+Additional methods were tried, including
+(i) FFT(Fast Fourier Transform) combined with the removal of selected frequencies, 
+(ii) Application of Daubechies (db4, db6), Symlet (sym4, sym8), Coiflet (coif3, coif5) wavelet families for smoothing showed no interesting insights and therefore were not further investigated.
+
+#### Lossless Encoding
+
+The augmented data (blow5 format) is compressed with 43 different encoding methods for PGXX22394_reads_chr22 dataset and 45 encoding methods for both PGXXXX230339_reads_chr22 and na12878_prom_merged_r9.4.1_chr22 datasets.
+
+### Evaluation Metrics
+
+#### Basecalling Accuracy
+
+The reads that have undergone base-calling, which entails determining the sequence of nucleobases in DNA strands, must be aligned with a reference genome for subsequent analysis. Certain reads may align with the same position in the reference genome, and these alignments are referred to as "matches." Conversely, there may be instances where none of the reads aligns with a particular region of the reference genome, and these are termed "gaps." The metric “identity scores” measures the similarity of basecalled sequences against a reference.
+
+\[ \text{idScore} = \frac{\text{matches}}{\text{matches} + \text{mismatches} + \text{gaps}} \]
+
+We use the pipeline presented in figure 2 to evaluate the basecalling accuracy. The basecalled reads were aligned to the reference genome using minimap2 [https://github.com/lh3/minimap2](https://github.com/lh3/minimap2) and the basecalled identity scores of the reads were obtained.
+
+####  Methylation Accuracy
+
+The standard bases in a genome are A (Adenine), T (Thymine), C (Cytosine), and G (Guanine), however, some of the bases could have modifications deviating from the standard bases; these are termed as modified bases.  A methylated form of the base Cytosine called 5-methylcytosine (5-mc) has been extensively studied and identified to play a major role in epigenetic control of genome expression. In addition, 5-hydroxymethylcytosine (5-hmC), 5-formylcytosine (5-fC) and 5-carboxylcytosine (5-caC) are also among some of the common forms of modified bases studied. These changes carry vital information and significantly affect gene expression and regulation [29][30]. The preservation of this modified base information is therefore of significant importance.
+
+For this study, methylation correlation was based on the augmented dataset’s ability to correctly recognise 5-mC.
+
+The methylation frequency correlation graph is utilized to assess the level of concordance between two distinct methods of methylation calling. Subsequent to the process of methylation calling, the frequency of methylation for each specific genomic position is obtained. We proceed to determine the number of such positions with designated x and y coordinates that represent the methylation frequencies for the two methods under comparison and subsequently illustrate them in the form of a heat map. The utilization of red or yellow hues signifies a greater abundance of positions with the two methylation frequencies. To have a good correlation between the two methylation calling methods, it is imperative to observe a higher number of positions with identical frequencies for both methods. This is exemplified by the presence of a reddish diagonal line, which indicates the utmost correlation.
 
 ## Results and Analysis
 
-## Conclusion
+Using the subsampled dataset, we conducted various manipulations such as rounding off, truncating, filling with ones, and frequency component removal. To compare these simple bit manipulation methods, we utilized the mean identity score error as a measure. Upon analyzing the results, we observed that all three methods exhibited relatively small errors when manipulating up to 3 bits. Among these methods, rounding off demonstrated the highest accuracy. However, starting from the 4th bit and beyond, we noticed a significant increase in the difference in error between the rounded data and the other two methods. This discrepancy can be attributed to the elbow point observed in Figure X.
+
+Another method used for manipulating the data involves the removal of certain frequency components from the signal. Specifically, the higher frequencies are targeted for removal. It was found that even when up to 20% of the top frequencies were removed, the reconstructed signal only experienced a relatively small decrease in accuracy. However, there was virtually no reduction in size when using the zlib svb_zd compression method. Therefore, further investigation into this manipulation technique did not seem justified, as the improvement in compression ratio was not significant enough to outweigh the compromise in accuracy.
+
+Results for rounding off can be observed in terms of both base-calling and methylation-calling accuracies.
+
+A preliminary assessment of the base-calling accuracy can be obtained by examining the density distribution of the identity scores. The alignment of this distribution with the base called reads from the original data is evident up to the 4-bit roundoff, as depicted in Figure x.
+
+Figure Y illustrates the decline in median base-calling accuracy as the number of bits under consideration increases. The accuracy exhibits a sudden decline following the consideration of 4 bits, aligning with the behaviour observed in an elbow plot.
+
+In the comparison of the identity scores between the original dataset and the bit-manipulated dataset, the discrepancies are evaluated on a per-read basis. This analysis allows us to identify not only the errors but also any enhancements achieved through the bit manipulation process, as indicated by the presence of negative error terms.
+
+Readwise read-read identity score is an alternative measure of accuracy for identity scores that bears a significant resemblance to the previous scenario. However, the distinction lies in our utilization of a distinct dataset for identity score calculation, rather than relying on a reference. Consequently, the two sets of reads are aligned, obtaining a collection of identity scores. The error terms exclusively stem from our bit manipulation process, as it entails a comparison between the original data and the bit manipulated data, without the presence of a reference sequence.
+
+For methylation calling accuracy, the initial metric is the correlation frequency matrix. The graph can be interpreted as a diagonal line, either red or yellow in colour, which signifies a strong correlation. In this case, the y-axis represents the calculated methylation frequencies using augmented data from Dorado or Guppy, one at a time. On the other hand, the x-axis represents the bisulfite methylation frequency, a chemical process that is known to provide mostly accurate data.
+
+The Guppy 6.5.7 version with the super accuracy model exhibits the highest correlation in methylation frequency for each bit roundoff. However, in the case of guppy-hac, dorado-sup, and dorado-hac, improvements in methylation frequency correlation are observed for certain bit manipulations when compared to the non-rounded-off scenario.
+
+Another method to assess the accuracies is via the concussion matrix. In the case of the rounded-off data, the F1 score is 0.9670221038, 0.9670028473, and 0.9579350604 for the original, 2-bit round, and 3-bit round datasets, respectively. Upon close examination of the results, there are instances where the rounded datasets exhibit superior false positives and true negatives. For instance, the original datasets yielded approximately 792432 and 91833636, whereas the 3bit rounded-off data set shows 752858 and 92014538 false positives and true negatives, respectively. From these results, the specificity and precision values can be deduced. Both of these values have improved in the rounded 3 datasets when compared to the original. Specifically, the specificity and precision have improved from 0.9914448274 and 0.9932253899 to 0.9918844547 and 0.9934474089, respectively, for the 3-bit dataset in comparison to the original dataset. However, the sensitivity (Recall) has decreased with the rounded-off datasets.
+
+As per stage (ii) of the proposed methodology, we calculate compression ratios of the dataset PGXX22394_reads_chr22 in its original form and rounded off at 1 to 4 bits as described in section 3.2.1 (lossy bit manipulations). We plot the values in the same plot after sorting them in ascending order in terms of the compression ratio of the original dataset.
+
+The current state-of-the-art lossless compression method, VBZ (named as zlib_svb_zd indicating the algorithms combined in the method [15]) gives a ratio of 3.85 for the 4-bit rounded-off dataset while the maximum amount of compression was observed in a method coded zstd_flac_P11 which is a combination of FLAC (Free Lossless Audio Codec), typically used in audio-compression applications and the zstd algorithm. For the 4-bit rounded-off data, the ratio of compression it gave was 4.93.
+
+Unsurprisingly, the compression ratios for the PGXXXX230339_reads_chr22 dataset also gave a similar plot with zstd_flac_p11 being the one with the highest ratio of compression of 5.6076 and the state-of-the-art VBZ showing a compression ratio of only 4.6074 (both for the for 4-bit rounded off dataset). 
+
+The compression ratios' theoretical upper bounds were determined by employing Shannon Entropy[26] at each phase of bit manipulation, allowing for a comparison between the acquired compression ratios and the theoretical bounds. The provided diagram illustrates the theoretical constraints of compression ratios for varied bit lengths of the datasets.
+
+Table [x] displays the compression ratios achieved subsequent to the application of lossless encoding techniques on data subjected to bit manipulation. The table compares the state-of-the-art and the best-performing one for denoised data against the theoretical maximum for PGXXXX230339_reads_chr22 and PGXX22394_reads_chr22 datasets rounded off considering 4 bits. It is evident that the most optimal technique bears a striking resemblance to the theoretical limit.
+
+## Discussion
+
+In this section, we shall delve into the outcomes of the experiments outlined in the aforementioned sections. 
+Upon plotting the histograms of the raw ADC values, we observed that there were sudden increases in the frequency of certain values. This prompted further investigation, which led to the discovery that these spikes occur at specific raw values, particularly when the two least significant bits of the values transition from 10 to 11. It is hypothesized that this phenomenon is a consequence of the introduction of electrical noise by the ADC. We were able to witness a noticeable trend as the utilization of the lossy bit manipulation techniques was implemented, wherein the histograms underwent a process of becoming more refined. The graphical representation, presented in Figure [X], provides a visual depiction of the disappearance of the abrupt peaks in the histograms as the magnitude of bits employed in the rounding-off procedure increases for the read 3ef316dc-1f68-4ead-ae7a-09a94e2a2105 of the PGXXXX230339_reads_chr22 dataset.
+
+It became apparent that the most effective technique for bit manipulation was the rounding off of the least significant bits (LSBs). The accompanying figure illustrates the behavior of the standard error as the number of bits considered increases, across all bit manipulation methods, for the dataset hg2_prom_lsk114_subsubsample. The standard errors exhibit an upward trend after 4 bits, irrespective of the method employed. It is worth noting that rounding off yields the smallest error, thus establishing itself as the optimal approach to lossy bit manipulation.
+
+Interestingly, the lossless-compression method that achieved the highest compression ratio was zstd_flac_P11, rather than the state-of-the-art VBZ as discussed in the results section. Further investigation led us to believe that this improved performance may be attributed to the enhanced clarity of the raw data resulting from the reduction of noise through lossy compression. As FLAC employs a predictive step that utilizes a linear combination of previous samples to forecast the next one, it is plausible that the linear predictor is able to effectively model the signal using less information when compressing a rounded-off dataset compared to the original dataset [31].
+
+Regarding future research, further investigations into the reasons and mechanisms by which the ADCs introduce noise to the raw data of the nanopore will enable the elimination of this noise at its source. When considering the task of signal denoising, one can put more effort into determining the most suitable methods for nanopore data, as the majority of existing denoising techniques are not specifically designed for such data. Conducting experiments on innovative lossless encoding techniques applied to denoised data will result in improved compression, as certain methods demonstrate significantly better performance in the absence of noise.
+Additionally, it can be investigated how downstream analysis performs on different hardware architectures, GPUs, different versions of software, and operating systems for the same data. This information can be used to establish an acceptable margin of error for lossy compression.
 
 ## Publications
 [//]: # "Note: Uncomment each once you uploaded the files to the repository"
@@ -94,6 +187,7 @@ Both lossless and lossy compression techniques have previously been examined. Bu
 1. [Project Proposal Presentation](https://docs.google.com/presentation/d/1B5NHxaCxq4HWcRp3xfms52uuq7upGqzzS-gKsycfYFk/edit?usp=sharing)
 2. [Progress Presentation](https://docs.google.com/presentation/d/1SknsVYHWG2FfJuG1bv61YaqGDOdCnZuaPIiq5vtCEjM/edit?usp=sharing)
 3. [Final Presentation](https://docs.google.com/presentation/d/1cpSIqvn2VKrk00jgBUI-Jm8HtgLYtgKnLqsMLzxlVk4/edit?usp=sharing)
+4. [Supplementary Material](https://docs.google.com/document/d/1Q7LL-w28HLtowiMXPWrjIORs-m7_7imh3gE6v1SG4w4/edit?usp=sharing)
 <!-- 5. Author 1, Author 2 and Author 3 "Research paper title" (2021). [PDF](./). -->
 
 
